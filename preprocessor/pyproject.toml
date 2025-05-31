@@ -1,0 +1,27 @@
+[project]
+name = "rtdlf-preprocessor"
+version = "0.1.0"
+description = "The preprocessor for the rtdlf renderer"
+authors = [
+  {name = "brmatthy, email = <109791839+brmatthy@users.noreply.github.com>"}
+]
+dependencies = [
+  "jax ~= 0.5.0",
+  "opencv-python ~= 4.11.0.86",
+  "yuvio ~= 1.4.1",
+  "flax ~= 0.10.2",
+  "numpy ~= 2.2.1"
+]
+
+[project.optional-dependencies]
+nvidia = [
+  "jax[cuda12] ~= 0.5.0"
+]
+
+[project.scripts]
+rtdlf-preprocessor = "rtdlf_preprocessor.main:main"
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
