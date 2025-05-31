@@ -6,5 +6,5 @@ This real-time dynamic light field renderer can generate novel viewpoints with 6
 
 The system consists of two main components:
 
-- [**Preprocessor**](./preprocessing/README.md): Offline transformation of a multi-view dataset into an intermediate representation used by the renderer.
+- [**Preprocessor**](./preprocessor/README.md): Offline transformation of a multi-view dataset into an intermediate representation used by the renderer.
 - [**Renderer**](./renderer/README.md): Real-time renderer using OpenGL to synthesize novel views from the intermediate representation.
