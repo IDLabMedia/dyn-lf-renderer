@@ -28,7 +28,7 @@ pip install .
 ```
 If you have an nvidia GPU, install using:
 ```bash
-pip install .[nvidia]
+pip install ".[nvidia]"
 ```
 this allows jax to run on your gpu, instead of on your cpu.
 
@@ -39,11 +39,12 @@ rtdlf-preprocessor -h
 ```
 An example setup could be:
 ```bash
-rtdlf-preprocessor -v voxel_cloud centers -f yuv
+rtdlf-preprocessor -i <path-to-input-folder> -o <path-to-output-folder> -v voxel_cloud centers -f yuv
 ```
 This will generate a voxel aligned point cloud with inpainting data, center vertex points for each cameras and the yuv colour files. These are all needed by the renderer.
+This process may take a while.
 
-## Intput data
+## Input data
 The input of the preprocessor are a depth and color video for each camera that captured the scene.
 The camera intrinsics and extrinsics should also be specified.
 
@@ -95,7 +96,7 @@ The depth videos must be raw yuv videos in the `yuv420p10le` format. `ffmpeg` ca
 ffmpeg -i <input.ext> -pix_fmt yuv420p10le -f rawvideo output.yuv
 ```
 The [`decompress_depth.sh`](./decompress_depth.sh) script transforms all `*_depth.mp4` files to yuv.
-If the names of the depth files end in `.mp4` in the json file, their `.yuv` counterpart will tried to be loaded instead.
+If the names of the depth files end in `.mp4` in the json file, their `.yuv` counterpart will try to be loaded instead.
 Otherwise should the name of the depth video match the name in the json file.
 
 ### Folder layout
@@ -104,14 +105,14 @@ An example intput folder layout is specified below.
 ```txt
 Frog
 ├── Frog.json
-├── v01_depth.mp4
-├── v01_texture.yuv
-├── v02_depth.mp4
-├── v02_texture.yuv
-├── v03_depth.mp4
-├── v03_texture.yuv
-├── v04_depth.mp4
-├── v04_texture.yuv
-├── v05_depth.mp4
-└── v05_texture.yuv
+├── v01_depth.yuv
+├── v01_texture.mp4
+├── v02_depth.yuv
+├── v02_texture.mp4
+├── v03_depth.yuv
+├── v03_texture.mp4
+├── v04_depth.yuv
+├── v04_texture.mp4
+├── v05_depth.yuv
+└── v05_texture.mp4
 ```
