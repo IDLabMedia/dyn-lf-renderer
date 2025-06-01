@@ -9,6 +9,14 @@ from rtdlf_preprocessor.video.video import Video
 
 
 class ColorVideo(Video):
+    # yuv to rgb transformation matrix
+    _mat_sycc_yuv_to_rgb = np.array(
+        [[1.0, 0.000037, 1.4020], [1.0, -0.3441, -0.7141], [1.0, 1.7720, 0.0]]
+    )
+    _mat_sycc_rgb_to_yuv = np.linalg.inv(_mat_sycc_yuv_to_rgb)
+    _M = 255
+    _Z = 128
+
     def __init__(self, path: str, width: int, height: int) -> None:
         super().__init__(path, width, height)
 
@@ -20,6 +28,34 @@ class ColorVideo(Video):
             raise IOError(f"Failed to read frame {frame} of file: {self.path}")
         return frame_data
 
+    def _sycc_yuv_to_rgb(self, image: np.ndarray) -> np.ndarray:
+        yuv = image.astype(np.float32)
+        # y' = y / M
+        # u' = (u - Z)/M
+        # v' = (u - Z)/M
+        yuv[:, :, 1:] -= self._Z
+        yuv /= self._M
+
+        rgb = yuv @ self._mat_sycc_yuv_to_rgb.T  # Matrix multiplication per pixel
+
+        rgb = np.clip(rgb, 0.0, 1.0)
+        rgb = (rgb * self._M).round().astype(np.uint8)
+
+        return rgb
+
+    def _sycc_rgb_to_yuv(self, image: np.ndarray) -> np.ndarray:
+        rgb = image.astype(np.float32) / self._M
+
+        yuv = rgb @ self._mat_sycc_rgb_to_yuv.T
+
+        yuv *= self._M
+        yuv[:, :, 1:] += self._Z
+
+        yuv = np.clip(yuv, 0.0, self._M)
+        yuv = yuv.round().astype(np.uint8)
+
+        return yuv
+
     def get_frame(self, frame: int) -> jnp.ndarray:
         return jnp.array(self._get_frame_data(frame))
 
@@ -30,14 +66,19 @@ class ColorVideo(Video):
         vid = cv2.VideoCapture(self.path)
         return int(vid.get(cv2.CAP_PROP_FRAME_COUNT))
 
+    def get_yuv_interleaved_frame_np(self, frame: int) -> np.ndarray:
+        rgb = cv2.cvtColor(self._get_frame_data(frame), cv2.COLOR_BGR2RGB)
+        return self._sycc_rgb_to_yuv(rgb)
+
     def get_yuv_interleaved_frame(self, frame: int) -> jnp.ndarray:
-        return jnp.array(cv2.cvtColor(self._get_frame_data(frame), cv2.COLOR_BGR2YUV))
+        return jnp.array(self.get_yuv_interleaved_frame_np(frame))
 
     def get_yuv420_frame(self, frame: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        data = self._get_frame_data(frame)
-        yuv = cv2.cvtColor(data, cv2.COLOR_BGR2YUV)
+        yuv_interleaved = self.get_yuv_interleaved_frame_np(frame)
 
-        y, u, v = cv2.split(yuv)
+        y = yuv_interleaved[:, :, 0]
+        u = yuv_interleaved[:, :, 1]
+        v = yuv_interleaved[:, :, 2]
 
         u_420 = cv2.resize(
             u, (u.shape[1] // 2, u.shape[0] // 2), interpolation=cv2.INTER_LINEAR
