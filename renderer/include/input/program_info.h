@@ -34,8 +34,8 @@ class ProgramInfo {
 private:
     std::string _inDir;
 
-    MeshType _meshType = MeshType::DUMMY;
-    FragmentType _fragmentType = FragmentType::DUMMY;
+    MeshType _meshType = MeshType::VMESH;
+    FragmentType _fragmentType = FragmentType::YUV;
 
     unsigned int _windowWidth = 1280;
     unsigned int _windowHeight = 720;

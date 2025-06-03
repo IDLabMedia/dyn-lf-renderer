@@ -11,7 +11,11 @@ from rtdlf_preprocessor.video.video import Video
 class ColorVideo(Video):
     # yuv to rgb transformation matrix
     _mat_sycc_yuv_to_rgb = np.array(
-        [[1.0, 0.000037, 1.4020], [1.0, -0.3441, -0.7141], [1.0, 1.7720, 0.0]]
+        [
+            [1.0, 0.000037, 1.401988],
+            [1.0, -0.344113, -0.714104],
+            [1.0, 1.771978, 0.000135],
+        ]
     )
     _mat_sycc_rgb_to_yuv = np.linalg.inv(_mat_sycc_yuv_to_rgb)
     _M = 255

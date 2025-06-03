@@ -279,8 +279,8 @@ void Application::run() {
     unsigned int frame = 0;
     double lastTime = glfwGetTime();
     bool updated = true;
-    double itStartTime = glfwGetTime();
     while (!glfwWindowShouldClose(_window) && !quit) {
+        double itStartTime = glfwGetTime();
         PROFILE_NEXT_IT();
         // Handles user input and updates the view matrix accordingly
         double elapsedTime = _paused ? 0.0f : glfwGetTime() - lastTime;
@@ -323,7 +323,7 @@ void Application::run() {
         glFinish();
 
         // output fps
-        /*std::cout << "\r" << "Frame: " << frame << "; FPS: " << 1 / (glfwGetTime() - itStartTime) << std::flush;*/
+        // std::cout << "\r" << "Frame: " << frame << "; FPS: " << 1 / (glfwGetTime() - itStartTime) << std::flush;
     }
 }
 
@@ -393,12 +393,6 @@ bool Application::handleUserInput(){
     movement *= _cameraSpeed;
     _accumMovement += movement;
     setViewMatrix();
-    // if (movement != glm::vec3(0)) {
-    //     // update the net movement vector
-    //     // compute new location of camera and set it for the shaders
-    //     setViewMatrix();
-    // }
-
     return quit;
 }
 

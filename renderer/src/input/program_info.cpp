@@ -142,10 +142,13 @@ void ProgramInfo::writeHelpMsg(std::ostream &out) const {
 
     out << "Optional arguments:" << std::endl;
     out << "    --help: Show this help and exit" << std::endl;
-    out << "    -m mesh-type: Specifies the mesh type (default: dummy)" << std::endl;
-    out << "    -f fragment-type: Specifies the fragment type (default: dummy)" << std::endl;
+    out << "    -m mesh-type: Specifies the mesh type (default: vmesh)" << std::endl;
+    out << "    -f fragment-type: Specifies the fragment type (default: yuv)" << std::endl;
     out << "    -w width: Specifies the width (default: 960)" << std::endl;
     out << "    -h height: Specifies the height (default: 540)" << std::endl;
+    out << "    -d duration: Specifies the amount of frames in the video (default: 300)" << std::endl;
+    out << "    -s grid-spacing: Specifies the grid spacing of the video (default: 0.01)" << std::endl;
+    out << "    -c cameras: Specifies the amount of cameras to use (default: 3)" << std::endl;
     out << std::endl;
 }
 
