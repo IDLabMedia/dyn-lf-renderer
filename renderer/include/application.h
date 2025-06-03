@@ -45,8 +45,8 @@ private:
 
 
     bool _headless = false;
-    int _headlessViewpoint;
     size_t _headlessFrame = 0;
+    std::string _headlessOutPath;
     GLuint _headlessRenderTarget = 0;
 
 

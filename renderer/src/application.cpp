@@ -142,7 +142,7 @@ void Application::setViewMatrix(){
 
 void Application::initialize(const ProgramInfo &programInfo) {
     _headless = programInfo.isHeadless();
-    _headlessViewpoint = programInfo.headlessViewpoint();
+    _headlessOutPath = programInfo.getHeadlessOutPath();
     _windowWidth = programInfo.getWindowWidth();
     _windowHeight = programInfo.getWindowHeight();
     this->initWindow();
@@ -162,17 +162,6 @@ void Application::initialize(const ProgramInfo &programInfo) {
         this->setUniforms(uniforms);
     }
     CameraSelector::getInstance().selectCameras(0, getViewMatrix());
-
-    if(_headlessViewpoint != -1){
-        // prevent the use of the viewpoint camera when generating viewpoint
-        auto cameras = CameraSelector::getInstance().getCameras();
-        std::vector<int> filtered;
-        std::copy_if(
-            cameras.begin(), cameras.end(), std::back_inserter(filtered),
-            [this](int x){return x != _headlessViewpoint;}
-        );
-        CameraSelector::getInstance().selectCameras(filtered);
-    }
 
     // get the decompressors
     _decompressors = std::move(programInfo.getDecompressors());
@@ -214,17 +203,6 @@ void Application::loadFrame(const size_t frame) {
     // update what cameras are used on the GPU
     CameraSelector::getInstance().selectCameras(frame, getViewMatrix());
 
-    if(_headlessViewpoint != -1){
-        // prevent the use of the viewpoint camera when generating viewpoint
-        auto cameras = CameraSelector::getInstance().getCameras();
-        std::vector<int> filtered;
-        std::copy_if(
-            cameras.begin(), cameras.end(), std::back_inserter(filtered),
-            [this](int x){return x != _headlessViewpoint;}
-        );
-        CameraSelector::getInstance().selectCameras(filtered);
-    }
-
     // update the texture
     if (_textureLoader) {
       PROFILE_SCOPE("Texture load");
@@ -262,8 +240,7 @@ void Application::runHeadless(){
   glReadPixels(0, 0, _windowWidth, _windowHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
 
   size_t usedCameras = CameraSelector::getInstance().getSelectedCount();
-  const std::string outPath = "output.png";
-  writeBufferToPNG(outPath, pixels.data(), _windowWidth, _windowHeight);
+  writeBufferToPNG(_headlessOutPath, pixels.data(), _windowWidth, _windowHeight);
 }
 
 

@@ -28,6 +28,7 @@
 #include "textures/yuv_texture.h"
 
 #include "uniforms/camera_uniforms.h"
+#include "input/json_reader.h"
 
 ProgramInfo::ProgramInfo(int argc, char *argv[]) {
     // check if at least 1 argument is passed
@@ -47,6 +48,9 @@ ProgramInfo::ProgramInfo(int argc, char *argv[]) {
     // get input dir
     _inDir = argv[1];
 
+    // get metadata
+    _metadataJson = readJsonFile(_inDir + "/metadata.json");
+
     // handle optional arguments
     for (unsigned int i = 2; i < argc; i++) {
         std::string arg = argv[i];
@@ -58,16 +62,12 @@ ProgramInfo::ProgramInfo(int argc, char *argv[]) {
             _windowWidth = std::stoul(argv[++i]);
         } else if (arg == "-h" && i + 1 < argc) {
             _windowHeight = std::stoul(argv[++i]);
-        } else if (arg == "-d" && i + 1 < argc) {
-            _totalFrames = std::stoul(argv[++i]);
-        } else if (arg == "-s" && i + 1 < argc) {
-            _gridSpacing = std::stof(argv[++i]);
         } else if (arg == "-c" && i + 1 < argc) {
             _usedCameras = std::stof(argv[++i]);
         } else if (arg == "--headless" && i + 2 < argc){
             _headless = true;
-            _headlessViewpoint = std::stoul(argv[++i]);
             _headlessFrame = std::stoul(argv[++i]);
+            _headlessOutPath = argv[++i];
         } else {
             std::cerr << "Unknown option " << arg << " or invalid arguments passed for option." << std::endl;
             writeHelpMsg(std::cerr);
@@ -133,7 +133,7 @@ FragmentType ProgramInfo::fragmentTypeFromString(const std::string &str) const {
 
 
 void ProgramInfo::writeHelpMsg(std::ostream &out) const {
-    out << "Usage: RTDLF [--help] input-dir [-m mesh-type] [-f fragment-type] [-w width] [-h height]" << std::endl;
+    out << "Usage: RTDLF [--help] input-dir [-m mesh-type] [-f fragment-type] [-w width] [-h height] [-c cameras] [--headless frame outPath]" << std::endl;
     out << std::endl;
 
     out << "Required arguments:" << std::endl;
@@ -146,9 +146,8 @@ void ProgramInfo::writeHelpMsg(std::ostream &out) const {
     out << "    -f fragment-type: Specifies the fragment type (default: yuv)" << std::endl;
     out << "    -w width: Specifies the width (default: 960)" << std::endl;
     out << "    -h height: Specifies the height (default: 540)" << std::endl;
-    out << "    -d duration: Specifies the amount of frames in the video (default: 300)" << std::endl;
-    out << "    -s grid-spacing: Specifies the grid spacing of the video (default: 0.01)" << std::endl;
     out << "    -c cameras: Specifies the amount of cameras to use (default: 3)" << std::endl;
+    out << "    --headless frame outPath: Render a single frame to a specified output image as a png" << std::endl;
     out << std::endl;
 }
 
@@ -201,7 +200,7 @@ std::vector<std::unique_ptr<Decompressor>> ProgramInfo::getDecompressors() const
     std::vector<std::unique_ptr<Decompressor>> decompressors;
     switch (_meshType) {
         case MeshType::VMESH: {
-            decompressors.push_back(std::make_unique<VclDecompressor>(_inDir, _totalFrames, _gridSpacing, _headless ? 0 : 5));
+            decompressors.push_back(std::make_unique<VclDecompressor>(_inDir, getTotalFrames(), getGridSpacing(), _headless ? 0 : 5));
             break;
         }
         default: /*No decompressor*/;
@@ -218,10 +217,10 @@ std::unique_ptr<DepthShader> ProgramInfo::getDepthShader() const{
 
 std::unique_ptr<MeshLoader> ProgramInfo::getMeshLoader() const {
     switch (_meshType) {
-        case MeshType::RAW: return std::make_unique<RawMesh>(_windowWidth, _windowHeight, _inDir, _totalFrames);
-        case MeshType::VOXEL: return std::make_unique<VoxelPcl>(_windowWidth, _windowHeight, _inDir, _totalFrames);
+        case MeshType::RAW: return std::make_unique<RawMesh>(_windowWidth, _windowHeight, _inDir, getTotalFrames());
+        case MeshType::VOXEL: return std::make_unique<VoxelPcl>(_windowWidth, _windowHeight, _inDir, getTotalFrames());
         case MeshType::VMESH: return std::make_unique<ColorMesh>(
-          _windowWidth, _windowHeight, _inDir, _totalFrames, _headless ? 0 : 5
+          _windowWidth, _windowHeight, _inDir, getTotalFrames(), _headless ? 0 : 5
         );
         default: {
             return std::make_unique<DummyMesh>(_windowWidth, _windowHeight);
@@ -240,7 +239,7 @@ std::unique_ptr<TexturesLoader> ProgramInfo::getTexturesLoader() const {
     switch (_fragmentType) {
         case FragmentType::RAW: {
             textureLoader = std::make_unique<RawImgsTexture>(
-                _inDir, resolutions, _totalFrames);
+                _inDir, resolutions, getTotalFrames());
             break;
         }
         case FragmentType::CODEC: {
@@ -252,13 +251,13 @@ std::unique_ptr<TexturesLoader> ProgramInfo::getTexturesLoader() const {
         }
         case FragmentType::YUV: {
             textureLoader = std::make_unique<YUVTexture>(
-                _inDir, resolutions.front().x, resolutions.front().y, _totalFrames, _headless
+                _inDir, resolutions.front().x, resolutions.front().y, getTotalFrames(), _headless
             );
             break;
         }
         case FragmentType::JPEG: {
             textureLoader = std::make_unique<JPEGTexture>(
-                _inDir, resolutions, _totalFrames);
+                _inDir, resolutions, getTotalFrames());
             break;
         }
         default: /*No textures*/;
@@ -287,9 +286,33 @@ std::vector<std::unique_ptr<Uniforms>> ProgramInfo::getUniformsList() const {
     return uniformsList;
 }
 
+size_t ProgramInfo::getTotalFrames() const{
+  if(!_metadataJson.contains("total_frames")){
+    std::cerr << "ERROR::JSON::METADATA::NO_TOTAL_FRAMES" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  return _metadataJson["total_frames"];
+}
+
+float ProgramInfo::getGridSpacing() const{
+  if(!_metadataJson.contains("grid_spacing")){
+    std::cerr << "ERROR::JSON::METADATA::NO_TOTAL_FRAMES" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  return _metadataJson["grid_spacing"];
+}
+
 glm::mat4 ProgramInfo::getBasicView() const {
-  auto matriches = CameraUniforms(_inDir).getInverseMatrices();
-  int cam = _headlessViewpoint == -1 ? 0 : _headlessViewpoint;
-  return matriches.at(cam);
+  std::string key = "view";
+  if(!_metadataJson.contains(key)){
+    std::cerr << "ERROR::JSON::METADATA::NO_VIEW" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  return glm::mat4(
+    (float)_metadataJson[key][0][0],(float)_metadataJson[key][1][0], (float)_metadataJson[key][2][0], (float)_metadataJson[key][3][0],
+    (float)_metadataJson[key][0][1],(float)_metadataJson[key][1][1], (float)_metadataJson[key][2][1], (float)_metadataJson[key][3][1],
+    (float)_metadataJson[key][0][2],(float)_metadataJson[key][1][2], (float)_metadataJson[key][2][2], (float)_metadataJson[key][3][2],
+    (float)_metadataJson[key][0][3],(float)_metadataJson[key][1][3], (float)_metadataJson[key][2][3], (float)_metadataJson[key][3][3]
+  );
 }
 

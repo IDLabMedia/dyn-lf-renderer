@@ -40,15 +40,15 @@ private:
     unsigned int _windowWidth = 1280;
     unsigned int _windowHeight = 720;
 
-    size_t _totalFrames = 300;
-    float _gridSpacing = 0.01;
+    nlohmann::json _metadataJson;
 
     size_t _usedCameras = 3;
 
     bool _headless = false;
-    int _headlessViewpoint = -1;
     size_t _headlessFrame = 0;
+    std::string _headlessOutPath;
 
+    float getGridSpacing() const;
     void writeHelpMsg(std::ostream& out) const;
     MeshType meshTypeFromString(const std::string& str) const;
     FragmentType fragmentTypeFromString(const std::string& str) const;
@@ -57,10 +57,10 @@ public:
 
     unsigned int getWindowWidth() const {return _windowWidth;}
     unsigned int getWindowHeight() const {return _windowHeight;}
-    size_t getTotalFrames() const {return _totalFrames;}
+    size_t getTotalFrames() const;
     bool isHeadless() const {return _headless;}
-    int headlessViewpoint() const {return _headlessViewpoint;}
     size_t headlessFrame() const {return _headlessFrame;}
+    const std::string& getHeadlessOutPath() const {return _headlessOutPath;}
 
     std::vector<ShaderInfo> getShaders() const;
     std::vector<std::unique_ptr<Decompressor>> getDecompressors() const;
