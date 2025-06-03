@@ -4,11 +4,17 @@
 
 #include "codec/decoder/decoder.h"
 
+#include <iostream>
 #include <string>
 
 int main(int argc, char* argv[]) {
-  std::string inDir = "/home/brent/projects/rtdlf/out";
-  std::string outPath = "/home/brent/projects/rtdlf/decodes/frame_0_0.yuv";
+  if (argc != 3) {
+    std::cerr << "Usage: " << argv[0] << " <input_dir> <output_path>\n";
+    return -1;
+  }
+
+  std::string inDir = argv[1];
+  std::string outPath = argv[2];
 
   Decoder decoder = Decoder(inDir);
   auto frames = decoder.decode(0, {0});
