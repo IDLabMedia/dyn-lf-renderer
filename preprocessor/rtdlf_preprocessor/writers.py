@@ -14,6 +14,17 @@ def write_bytes(out_path: Path, data: bytes) -> None:
         file.write(data)
 
 
+def write_metadata(
+    out_dir: Path, total_frames: int, grid_spacing: float, view: np.ndarray
+) -> None:
+    metadata = {}
+    metadata["total_frames"] = total_frames
+    metadata["grid_spacing"] = grid_spacing
+    metadata["view"] = view.tolist()
+    with open(str(out_dir / "metadata.json"), "w") as f:
+        json.dump(metadata, f, indent=1)
+
+
 def write_cameras_info(out_path: Path, cameras: List[Camera]) -> None:
     cam_dict = []
     for camera in cameras:

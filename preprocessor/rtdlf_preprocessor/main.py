@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import numpy as np
 
 from pathlib import Path
 from typing import List, Optional
@@ -8,7 +9,7 @@ from typing import List, Optional
 from rtdlf_preprocessor.data_loader import DataLoader
 
 from rtdlf_preprocessor.threadpool import ThreadPool
-from rtdlf_preprocessor.writers import write_cameras_info
+from rtdlf_preprocessor.writers import write_cameras_info, write_metadata
 
 from rtdlf_preprocessor.generators.fragment_generator import (
     FragmentFormat,
@@ -62,11 +63,6 @@ def create_parser() -> argparse.ArgumentParser:
         type=str,
         help="List of all the fragment formats to generate. Each format can be used by the RTDLF renderer.",
         required=False,
-    )
-    optional.add_argument(
-        "--no-cam-output",
-        action="store_false",
-        help="Don't write the camera metadata to the output folder. (default: enabled)",
     )
     optional.add_argument(
         "--verbose",
@@ -200,6 +196,13 @@ def main():
         write_cameras_info, out_path=args.output, cameras=cameras
     )
     print("Generating camera information... Done")
+    write_metadata(
+        args.output,
+        color_vids[0].total_frames(),
+        args.grid_spacing,
+        np.array(cameras[0].model),
+    )
+    print("Generating metadata... Done")
 
     # generate vertex formats
     v_generator = VertexGenerator(
