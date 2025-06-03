@@ -25,6 +25,28 @@ This folder should contain everything needed to render the scene, and thus you c
 ./RTDLF <path-preprocessor-out>
 ```
 
+## Controls
+
+- `h`: move viewpoint left
+- `l`: move viewpoint right
+- `j`: move viewpoint down
+- `k`: move viewpoint up 
+
+- `i`: zoom in
+- `o`: zoom out
+
+- `left arrow`: rotate camera left
+- `right arrow`: rotate camera right
+- `down arrow`: rotate camera down 
+- `up arrow`: rotate camera up
+
+- `s`: pause playback
+- `g`: resume playback
+
+> Note that no new cameras get loaded on pause. Inpainted regions will thus stay the same untill you resume playback.
+
+- `Esc`: Kill the program
+
 ## All cli options
 
 | Argument    | Description                                       |
@@ -37,8 +59,8 @@ This folder should contain everything needed to render the scene, and thus you c
 | `--help`                   | Show the help message                                                                                            |
 | `-m mesh-type`             | Specifies the mesh type (**default:** `vmesh`)                                                                   |
 | `-f fragment-type`         | Specifies the fragment type (**default:** `yuv`)                                                                 |
-| `-w width`                 | Specifies the output width (**default:** `960`)                                                                  |
-| `-h height`                | Specifies the output height (**default:** `540`)                                                                 |
+| `-w width`                 | Specifies the output width (**default:** `1280`)                                                                 |
+| `-h height`                | Specifies the output height (**default:** `720`)                                                                 |
 | `-c cameras`               | Specifies the number of cameras to use (**default:** `3`)                                                        |
 | `--headless frame outPath` | Render a single frame to the specified output path as a PNG image. Example: `--headless 15 ./output/frame15.png` |
 
